@@ -4,15 +4,18 @@ package com.kitware.charleslaw.ball;
  * Created by charles.law on 1/14/2015.
  */
 
-//package com.kitware.charleslaw.ball;
+//package com.kitware.charleslaw.dot;
         import android.content.Context;
         import android.graphics.Canvas;
         import android.graphics.drawable.BitmapDrawable;
         import android.os.Handler;
         import android.util.AttributeSet;
         import android.widget.ImageView;
+
+        import java.util.ArrayList;
+
 public class AnimatedView extends ImageView{
-    private Ball[] Balls = new Ball[2];
+    private ArrayList<Dot> Dots = new ArrayList<Dot>();
     private Context MContext;
     int X = -1;
     int Y = -1;
@@ -25,11 +28,18 @@ public class AnimatedView extends ImageView{
         super(context, attrs);
         this.MContext = context;
         this.H = new Handler();
-        this.Balls[0] = new Ball(500, 200, 0, 10);
-        this.Balls[1] = new Ball(400, 900, 0, -10);
+        this.Dots.add(new Dot(500, 200, 0, 10));
+        this.Dots.add(new Dot(400, 900, 0, -10));
 
-        this.Balls[0].addSpring(this.Balls[1]);
-        this.Balls[1].addSpring(this.Balls[0]);
+        Dot temp = null;
+
+        for(int i = 0; i < this.Dots.size(); i++)
+        {
+            temp = this.Dots.get(i);
+            temp.initializeSprings(this.Dots);
+            this.Dots.set(i, temp);
+        }
+
 
     }
     private Runnable Rn = new Runnable() {
@@ -39,10 +49,10 @@ public class AnimatedView extends ImageView{
         }
     };
     protected void onDraw(Canvas c) {
-        for (int i = 0; i < this.Balls.length; ++i) {
-            Balls[i].Draw(c, this.getWidth(), this.getHeight(), this.MContext);
+        for (int i = 0; i < this.Dots.size(); ++i) {
+            Dots.get(i).Draw(c, this.getWidth(), this.getHeight(), this.MContext);
             for (int j=0; j < i; ++j) {
-                //Balls[i].Collide(Balls[j]);
+                //Dots[i].Collide(Dots[j]);
             }
         }
 
