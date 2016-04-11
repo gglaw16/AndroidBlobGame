@@ -30,14 +30,12 @@ public class AnimatedView extends ImageView{
         this.H = new Handler();
         this.Dots.add(new Dot(500, 200, 0, 10));
         this.Dots.add(new Dot(400, 900, 0, -10));
+        this.Dots.add(new Dot(350, 800, 5, 0));
 
-        Dot temp = null;
 
         for(int i = 0; i < this.Dots.size(); i++)
         {
-            temp = this.Dots.get(i);
-            temp.initializeSprings(this.Dots);
-            this.Dots.set(i, temp);
+            this.Dots.get(i).initializeSprings(this.Dots);
         }
 
 

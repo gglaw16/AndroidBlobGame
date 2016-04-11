@@ -29,7 +29,9 @@ public class Dot {
     public void initializeSprings(ArrayList<Dot> otherDots){
         for(int i = 0; i < otherDots.size(); i++)
         {
-            this.Springs.add(otherDots.get(i));
+            if(otherDots.get(i) != this) {
+                this.Springs.add(otherDots.get(i));
+            }
         }
     }
 
