@@ -17,6 +17,7 @@ public class Dot {
     private double Radius = -1;
     protected double Mass = Radius*Radius;
     protected ArrayList<Dot> Springs;
+    protected boolean beingTouched;
 
     public Dot(int x, int y, int vx, int vy) {
         this.X = x;
@@ -24,9 +25,15 @@ public class Dot {
         this.XVelocity = vx;
         this.YVelocity = vy;
         this.Springs = new ArrayList<Dot>();
+        this.beingTouched = false;
+    }
+
+    public ArrayList<Dot> getSprings(){
+        return Springs;
     }
 
     public void initializeSprings(ArrayList<Dot> otherDots){
+        this.Springs.clear();
         for(int i = 0; i < otherDots.size(); i++)
         {
             if(otherDots.get(i) != this) {
@@ -35,40 +42,68 @@ public class Dot {
         }
     }
 
+    public boolean Touch(double x, double y) {
+        double dx = x - this.X;
+        double dy = y - this.Y;
+        if (dx*dx + dy*dy < this.Radius * this.Radius*2) {
+            this.XVelocity = 0.0;
+            this.YVelocity = 0.0;
+            this.beingTouched = true;
+            return true;
+        }
+        return false;
+    }
+
+    public void setBeingTouched(boolean value){
+        this.beingTouched = value;
+    }
+
+    public void Move(float dx, float dy) {
+        this.XVelocity = 0;
+        this.YVelocity = 0;
+        this.X += dx;
+        this.Y += dy;
+    }
+
+    public double GetXPosition(){
+        return this.X;
+    }
+
+    public double GetYPosition(){
+        return this.Y;
+    }
+
     public void addSpring(Dot otherDot){
         this.Springs.add(otherDot);
     }
 
-    /*
-    protected void Collide(Dot otherDot) {
+    public double Distance2(Dot otherDot) {
+        double dx = this.X - otherDot.X;
+        double dy = this.Y - otherDot.Y;
+        return dx*dx + dy*dy;
+    }
+
+    protected boolean Collide(Dot otherDot) {
         double dx = this.X - otherDot.X;
         double dy = this.Y - otherDot.Y;
         double dist = Math.sqrt(dx*dx + dy*dy);
         double penetration = (2*this.Radius - dist) / 2;
         if (penetration < 0) {
-            return;
+            return false;
         }
-        // Normalize
-        dx = dx / dist;
-        dy = dy / dist;
-        // Remove any interpenetration.
-        this.X += dx*penetration;
-        this.Y += dy*penetration;
-        otherDot.X -= dx*penetration;
-        otherDot.Y -= dy*penetration;
-        // Now for the bounce.
-        double momentum1 = this.XVelocity*dx + this.YVelocity*dy;
-        double momentum2 = otherDot.XVelocity*dx + otherDot.YVelocity*dy;
-        this.XVelocity += (momentum2-momentum1) * dx;
-        this.YVelocity += (momentum2-momentum1) * dy;
-        // now for the other dot.
-        otherDot.XVelocity += (momentum1-momentum2) * dx;
-        otherDot.YVelocity += (momentum1-momentum2) * dy;
+        else{
+            if(dist < 50){
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
     }
-    */
+
 
     protected void Draw(Canvas c, int width, int height, Context ctx) {
-        BitmapDrawable dot = (BitmapDrawable) ctx.getResources().getDrawable(R.drawable.dot);
+        BitmapDrawable dot = (BitmapDrawable) ctx.getResources().getDrawable(R.drawable.smalldot);
         if (this.Radius < 0) {
             this.Radius = dot.getBitmap().getWidth()/2.5;
         }
@@ -95,32 +130,34 @@ public class Dot {
                 this.YVelocity = Math.abs(this.YVelocity);
             }
             // Gravity
-            //this.YVelocity += 0.5;
 
-            for(int i = 0; i < Springs.size(); i++) {
-                //How long is the spring??
-                double dX = Springs.get(i).X - this.X;
-                double dY = Springs.get(i).Y - this.Y;
-                double distance = Math.sqrt(dX * dX + dY * dY);
+            if(!this.beingTouched) {
+                int totalDX = 0;
+                int totalDY = 0;
+                for (int i = 0; i < Springs.size(); i++) {
+                    //How long is the spring??
+                    double dX = Springs.get(i).X - this.X + Math.random();
+                    double dY = Springs.get(i).Y - this.Y + Math.random();
+                    double distance = Math.sqrt(dX * dX + dY * dY);
 
-                //dX dY change to normal
-                dX /= distance;
-                dY /= distance;
+                    //dX dY change to normal
+                    if (distance == 0) {
+                        continue;
+                    }
+                    dX /= distance;
+                    dY /= distance;
 
-                //turn dx and dy into acceleration
-                double forceMag = distance - 100;
-                dX *= forceMag;
-                dY *= forceMag;
+                    distance -= 100;
+                    dX = dX * 0.2 * distance;
+                    dY = dY * 0.2 * distance;
 
-                dX /= (this.Mass * 100);
-                dY /= (this.Mass * 100);
-
-                this.XVelocity += dX;
-                this.YVelocity += dY;
-
-                this.XVelocity *= .99;
-                this.YVelocity *= .99;
+                    totalDX += dX;
+                    totalDY += dY;
+                }
+                this.XVelocity = totalDX;
+                this.YVelocity = totalDY;
             }
+
         }
         c.drawBitmap(
             dot.getBitmap(),
