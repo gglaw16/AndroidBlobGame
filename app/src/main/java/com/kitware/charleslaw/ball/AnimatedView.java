@@ -22,7 +22,6 @@ public class AnimatedView extends ImageView{
     private SensorManager mSensorManager;
 
     private ArrayList<Dot> Dots = new ArrayList<Dot>();
-    private ArrayList<Dot> SeparateDots = new ArrayList<Dot>();
     private Context MContext;
     int X = -1;
     int Y = -1;
@@ -41,14 +40,13 @@ public class AnimatedView extends ImageView{
         this.MContext = context;
         this.H = new Handler();
         for(int i = 0; i < numRandC*numRandC; i++){
-            this.Dots.add(new Dot(350, 200, 0, 0));
+            this.Dots.add(new Dot(350.0+(Math.random()*5), 200.0+(Math.random()*5), 0.0, 0.0));
         }
         for (int x = 100; x <= 1000; x += 500) {
             for (int y = 100; y <= 3000; y += 500) {
-                this.SeparateDots.add(new Dot(x, y, 0, 0));
+                this.Dots.add(new Dot(x, y, 0, 0));
             }
         }
-        initializeAllSprings();
 
         mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 
@@ -65,45 +63,13 @@ public class AnimatedView extends ImageView{
     };
 
 
-    protected void onDraw(Canvas c) {
-        for (int j=0; j < SeparateDots.size(); ++j) {
-            this.SeparateDots.get(j).Draw(c, this.getWidth(), this.getHeight(), this.MContext);
-        }
-
+    protected void onDraw(Canvas canvas) {
         ArrayList<Dot> collectedDots = new ArrayList<Dot>();
         for (int i = 0; i < this.Dots.size(); ++i) {
             Dot dot = this.Dots.get(i);
-            ArrayList<Dot> tempSprings = dot.getSprings();
-            double springLength;
-            double shortestSpring = 0;
-            for (int j = 0; j < tempSprings.size(); ++j) {
-                springLength = Math.sqrt((this.Dots.get(i).GetXPosition() - tempSprings.get(j).GetXPosition()) *
-                        (this.Dots.get(i).GetXPosition() - tempSprings.get(j).GetXPosition()) +
-                        (this.Dots.get(i).GetYPosition() - tempSprings.get(j).GetXPosition()) *
-                                (this.Dots.get(i).GetYPosition() - tempSprings.get(j).GetYPosition()));
-
-                if (j == 0 || springLength < shortestSpring) {
-                    shortestSpring = springLength;
-                }
-            }
-            if (shortestSpring > 500) {
-                //this.SeparateDots.add(this.Dots.get(i));
-                //this.Dots.remove(i);
-                //if((numRandC - 1)*(numRandC - 1) >= Dots.size()){
-                //    numRandC--;
-                //}
-                //initializeAllSprings();
-            } else {
-                for (int j = 0; j < this.SeparateDots.size(); ++j) {
-                    Dot checkDot = this.SeparateDots.get(j);
-                    if (dot.Collide(checkDot)) {
-                        collectedDots.add(checkDot);
-                        this.SeparateDots.remove(j);
-                    }
-                }
-            }
-
-            this.Dots.get(i).Draw(c, this.getWidth(), this.getHeight(), this.MContext);
+            // Part of draw
+            //dot.applySprings();
+            dot.Draw(canvas, this.getWidth(), this.getHeight(), this.MContext);
         }
 
         if (collectedDots.size() > 0) {
@@ -113,64 +79,21 @@ public class AnimatedView extends ImageView{
             if((numRandC)*(numRandC) < Dots.size()){
                 numRandC++;
             }
-            this.initializeAllSprings();
+        }
+
+        // Draw springs
+        for (int i = 0; i < this.Dots.size(); ++i) {
+            Dot dot = this.Dots.get(i);
+            dot.drawSprings(canvas);
+        }
+
+        // Break and make springs.
+        for (int i = 0; i < this.Dots.size(); ++i) {
+            Dot dot = this.Dots.get(i);
+            dot.updateNeighbors(this.Dots);
         }
 
         this.H.postDelayed(this.Rn, FRAME_RATE);
-    }
-
-        protected void addSpring(int idx1, int idx2){
-            if (idx1 == idx2) return;
-            if (idx1 < 0 || idx2 < 0 ) return;
-            if (idx1 >= this.Dots.size()) return;
-            if (idx2 >= this.Dots.size()) return;
-            this.Dots.get(idx1).getSprings().add(this.Dots.get(idx2));
-        }
-
-        protected void initializeAllSprings(){
-
-        // Get rid of old springs.
-        for(int i = 0; i < this.Dots.size(); i++) {
-            this.Dots.get(i).getSprings().clear();
-        }
-
-        for(int i = 0; i < this.Dots.size(); i++)
-        {
-            int x = i%numRandC;
-            int y = (i-x)/numRandC;
-            if(x != 0) {
-                this.addSpring(i, i-1);
-                if(y != 0) {
-                    this.addSpring(i, i - numRandC - 1);
-                }
-                if(y != numRandC - 1) {
-                    if(i + numRandC < this.Dots.size()) {
-                        this.addSpring(i, i + numRandC - 1);
-                    }
-                }
-            }
-            if(x != numRandC - 1) {
-                if(i + 1 < this.Dots.size()) {
-                    this.addSpring(i, i + 1);
-                }
-                if(y != 0) {
-                    this.addSpring(i, i - numRandC + 1);
-                }
-                if(y != numRandC - 1) {
-                    if(i + numRandC < this.Dots.size()) {
-                        this.addSpring(i,i + numRandC + 1);
-                    }
-                }
-            }
-            if(y != 0) {
-                this.addSpring(i, i - numRandC);
-            }
-            if(y != numRandC - 1) {
-                if(i + numRandC < this.Dots.size()) {
-                    this.addSpring(i,i + numRandC);
-                }
-            }
-        }
     }
 
     @Override
